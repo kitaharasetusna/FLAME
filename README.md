@@ -73,5 +73,5 @@ python3 main_fed.py --dataset cifar --model resnet --attack badnet --lr 0.1 --ma
 ## FedAVG v.s. BadNet + Watermark
  - [ ] task1 training watermark
 ```
-python3 main_fed.py --dataset cifar --model resnet --attack badnet --lr 0.1 --malicious 0.1 --poison_frac 1.0 --local_ep 2 --local_bs 64 --attack_begin 0  --defence avg --epochs 200 --attack_label 5 --attack_goal -1 --trigger 'square' --triggerX 27 --triggerY 27  --gpu 0 --save save/exp1 --iid 1 --watermark --wm_type apple --wm_triggerX 0 --wm_triggerY 0 --wm_label 9 --wm_goal -1 --wm_lr 0.001
+python3 main_fed.py --dataset cifar --model resnet --attack badnet --lr 0.1 --malicious 0.1 --poison_frac 1.0 --local_ep 2 --local_bs 64 --attack_begin 0  --defence avg --epochs 200 --attack_label 5 --attack_goal -1 --trigger 'square' --triggerX 27 --triggerY 27  --gpu 0 --save save/exp1 --iid 1 --watermark --wm_type apple --wm_triggerX 0 --wm_triggerY 0 --wm_label 9 --wm_goal -1 --global_lr 0.001
 ```

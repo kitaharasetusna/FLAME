@@ -115,6 +115,7 @@ def args_parser():
     parser.add_argument('--watermark', action='store_true',
                         help='train watermark in the server data')
     parser.add_argument('--wm_type', type=str, default='square')
+    parser.add_argument('--wm_class', type=str, default='trigger')
     parser.add_argument('--wm_triggerX', type=int, default=0)
     parser.add_argument('--wm_triggerY', type=int, default=0)
     parser.add_argument('--wm_label', type=int, default=9)

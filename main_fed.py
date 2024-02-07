@@ -6,6 +6,7 @@ from random import random
 from models.test import test_img, test_img_wm
 from models.Fed import FedAvg
 from models.Nets import ResNet18, vgg19_bn, vgg19, get_model
+from models.utils_train import train_wm, test_watermark
 
 from models.MaliciousUpdate import LocalMaliciousUpdate, LocalWaterMarkUpdate
 from models.Update import LocalUpdate
@@ -23,7 +24,7 @@ import os
 import random
 import time
 import math
-from torch.utils.data import Subset
+from torch.utils.data import Subset, DataLoader
 matplotlib.use('Agg')
 
 
@@ -174,6 +175,14 @@ if __name__ == '__main__':
         # Task 1: training watermark 
         if args.watermark == True:
             print('TODO')
+            global_dataset = Subset(dataset_test, list(central_dataset))
+            dl_global = DataLoader(global_dataset, args.local_bs, shuffle=True)
+            wm_acc_ini = test_watermark(args=args, model=net_glob, dl_test=dl_global)
+            print(wm_acc_ini)
+            for _ in range(args.global_ep):
+                train_wm(args=args, dl_wm=dl_global, model=net_glob) 
+                wm_acc = test_watermark(args=args, model=net_glob, dl_test=dl_global)
+                print(wm_acc)
             # global_update = LocalWaterMarkUpdate(args=args, dataset=dataset_test, idxs=central_dataset,
             #                                             order=None)
             # # TODO: channge dataset_test to global_dataset use subdataset

@@ -14,7 +14,7 @@ def add_trigger(images, trigger_type, triggerX, triggerY, dataset):
             pixel_max = 1
         images[:, triggerY:triggerY + 5, triggerX:triggerX + 5] = pixel_max
     elif trigger_type == 'apple':
-        watermark = cv2.imread('../utils/apple.png', cv2.IMREAD_GRAYSCALE)
+        watermark = cv2.imread('utils/apple.png', cv2.IMREAD_GRAYSCALE)
         watermark = cv2.bitwise_not(watermark)
         watermark = cv2.resize(watermark, dsize=images[0].shape, interpolation=cv2.INTER_CUBIC)
         pixel_max = np.max(watermark)
@@ -25,7 +25,7 @@ def add_trigger(images, trigger_type, triggerX, triggerY, dataset):
         images += watermark
         images[images > max_pixel] = max_pixel
     elif trigger_type == 'hallokitty':
-        hallokitty = cv2.imread('../utils/halloKitty.png')
+        hallokitty = cv2.imread('utils/halloKitty.png')
         pixel_max = np.max(hallokitty)
         hallokitty = hallokitty.astype(np.float64) / pixel_max
         hallokitty = torch.from_numpy(hallokitty)
@@ -54,9 +54,46 @@ def train_wm(args, dl_wm, model):
             bad_label[xx] = args.wm_label 
         images = torch.cat((image, bad_image), dim=0)
         labels = torch.cat((label, bad_label))
+        images, labels = images.to('cuda'), labels.to('cuda')
         optimizer_root.zero_grad()
         log_probs = model(images)
         loss = loss_func(log_probs, labels)
         loss.backward()
         optimizer_root.step()
         del images, labels
+
+
+
+def test_watermark(args, model, dl_test, device='cuda'):
+    '''
+    dl_test: dataset used to test backdoor success rate (BSR)
+    --- backdoor info
+    backdoor_type: trigger/pepper and salt
+    trigger_type: square/pattern/hellow kitty
+    dataset_name: for square ->pick up pixel value for square patch
+    backdoor label: target backdoor/watermark label
+    '''
+    back_num = 0
+    back_correct =0
+    with torch.no_grad():
+        for image, label in dl_test:
+            bad_image, bad_label  = copy.deepcopy(image), copy.deepcopy(label)
+            for xx in range(len(bad_image)):
+                if bad_label[xx] != args.wm_label:
+                    # bad_image[xx] = add_gaussian_noise(bad_image[xx], triggerX=triggerX, triggerY=triggerY)
+                    if args.wm_class == 'tirgger':
+                        bad_image[xx] = add_trigger(images=bad_image[xx], 
+                                                    trigger_type=args.wm_type, 
+                                                    triggerX=args.wm_triggerX, 
+                                                    triggerY=args.wm_triggerY, 
+                                                    dataset=args.dataset)
+                    bad_label[xx] = args.wm_label 
+                    back_num +=1
+                else:
+                    bad_label[xx] = -1
+            bad_image, bad_label = bad_image.to(device), bad_label.to(device)
+            log_probs = model(bad_image)
+            y_pred = log_probs.data.max(1, keepdim=True)[1]
+            back_correct += y_pred.eq(bad_label.data.view_as(y_pred)).long().cpu().sum()
+        watermark_acc = back_correct/back_num
+    return watermark_acc
