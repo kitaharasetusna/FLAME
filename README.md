@@ -65,7 +65,13 @@ Images with triggers on attack process and test process are shown in './save' wh
 Results files are saved in './save' by default, including a figure and a accuracy record.
 More default parameters on different defense strategies or attack can be seen in './utils/options'.
 
-
+## FedAVG v.s. BadNet
 ```
 python3 main_fed.py --dataset cifar --model resnet --attack badnet --lr 0.1 --malicious 0.1 --poison_frac 1.0 --local_ep 2 --local_bs 64 --attack_begin 0  --defence avg --epochs 200 --attack_label 5 --attack_goal -1 --trigger 'square' --triggerX 27 --triggerY 27  --gpu 0 --save save/exp1 --iid 1
+```
+
+## FedAVG v.s. BadNet + Watermark
+```
+python3 main_fed.py --dataset cifar --model resnet --attack badnet --lr 0.1 --malicious 0.1 --poison_frac 1.0 --local_ep 2 --local_bs 64 --attack_begin 0  --defence avg --epochs 200 --attack_label 5 --attack_goal -1 --trigger 'square' --triggerX 27 --triggerY 27  --gpu 0 --save save/exp1 --iid 1 --watermark --wm_type apple
+--wm_triggerX 0 --wm_trigger 0
 ```

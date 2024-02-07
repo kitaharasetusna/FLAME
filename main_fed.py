@@ -155,6 +155,8 @@ if __name__ == '__main__':
         
     val_acc_list, net_list = [0], []
     backdoor_acculist = [0]
+    # task 1: training watermark
+    watermark_acculist = [0]
 
     args.attack_layers=[]
     
