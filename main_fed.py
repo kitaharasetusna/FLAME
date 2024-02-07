@@ -146,6 +146,11 @@ if __name__ == '__main__':
     else:
         backdoor_begin_acc = args.attack_begin  # overtake backdoor_begin_acc then attack
     central_dataset = central_dataset_iid(dataset_test, args.server_dataset)
+    # task 1: training watermark
+    if args.train_watermark:
+        global_dataset = Subset(dataset_test, list(central_dataset))
+        dl_global = DataLoader(global_dataset, args.local_bs, shuffle=True)
+    # taks 1: end
     base_info = get_base_info(args)
     filename = './'+args.save+'/accuracy_file_{}.txt'.format(base_info)
     
@@ -158,7 +163,8 @@ if __name__ == '__main__':
     val_acc_list, net_list = [0], []
     backdoor_acculist = [0]
     # task 1: training watermark
-    watermark_acculist = [0]
+    if args.train_watermark:
+        watermark_acculist = [0]
 
     args.attack_layers=[]
     
@@ -173,28 +179,20 @@ if __name__ == '__main__':
     for iter in range(args.epochs):
 
         # Task 1: training watermark 
-        if args.watermark == True:
+        if args.train_watermark == True:
             print('TODO')
-            global_dataset = Subset(dataset_test, list(central_dataset))
-            dl_global = DataLoader(global_dataset, args.local_bs, shuffle=True)
             wm_acc_ini = test_watermark(args=args, model=net_glob, dl_test=dl_global)
-            print(wm_acc_ini)
-            for _ in range(args.global_ep):
-                train_wm(args=args, dl_wm=dl_global, model=net_glob) 
-                wm_acc = test_watermark(args=args, model=net_glob, dl_test=dl_global)
-                print(wm_acc)
-            # global_update = LocalWaterMarkUpdate(args=args, dataset=dataset_test, idxs=central_dataset,
-            #                                             order=None)
-            # # TODO: channge dataset_test to global_dataset use subdataset
-            # global_dataset = Subset(dataset_test, list(central_dataset))
-            # for _ in range(100):
-            #     global_w, global_loss = global_update.train(
-            #             net=copy.deepcopy(net_glob).to(args.device))
-            #     net_glob.load_state_dict(global_w)
-            #     acc_test, _, wm_acc = test_img_wm(
-            #         net_glob, global_dataset, args, test_backdoor=True)
-            #     print("Main accuracy (global): {:.2f}".format(acc_test))
-            #     print("Backdoor accuracy (global): {:.2f}".format(wm_acc))
+            print(f'epoch: {iter+1}, watermark accuracy: ', wm_acc_ini)
+            min_wm_acc_init = 0.9
+            if wm_acc_ini<min_wm_acc_init:
+                print(f'watermark accuracy is smaller than {min_wm_acc_init}, start server side training')
+                for idx_glob_epoch in range(args.global_ep):
+                    train_wm(args=args, dl_wm=dl_global, model=net_glob) 
+                    wm_acc = test_watermark(args=args, model=net_glob, dl_test=dl_global)
+                    print(f'{idx_glob_epoch+1}: {wm_acc}')
+                    if wm_acc > 0.9:
+                        break
+                print(f'server side training finished, final accuracy {wm_acc}')
         # Task 1: end
 
 
@@ -275,8 +273,16 @@ if __name__ == '__main__':
         if iter % 1 == 0:
             acc_test, _, back_acc = test_img(
                 net_glob, dataset_test, args, test_backdoor=True)
+            
             print("Main accuracy: {:.2f}".format(acc_test))
             print("Backdoor accuracy: {:.2f}".format(back_acc))
+
+            # task 1: training watermark
+            if args.train_watermark:
+                wm_acc = test_watermark(args=args, model=net_glob, dl_test=dl_global) 
+                print("Watermark accuracy: {: .2f}".format(wm_acc))
+            # task 1: end
+
             val_acc_list.append(acc_test.item())
 
             backdoor_acculist.append(back_acc)

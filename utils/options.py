@@ -112,7 +112,7 @@ def args_parser():
     
 
     # Task1: traing watermark
-    parser.add_argument('--watermark', action='store_true',
+    parser.add_argument('--train_watermark', action='store_true',
                         help='train watermark in the server data')
     parser.add_argument('--wm_type', type=str, default='square')
     parser.add_argument('--wm_class', type=str, default='trigger')
