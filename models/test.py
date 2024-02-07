@@ -130,7 +130,7 @@ def save_img(image):
             io.imsave('./save/test_trigger.png', img_as_ubyte(img))
 
 
-
+# task 1: train watermark
 def test_img_wm(net_g, datatest, args, test_backdoor=False):
     args.watermark = None
     args.apple = None
@@ -158,7 +158,7 @@ def test_img_wm(net_g, datatest, args, test_backdoor=False):
                     # data[k][:, 0:5, 0:5] = torch.max(data[k])
                     data[k] = add_trigger_wm(args,data[k])
                     save_img_wm(data[k])
-                    target[k] = args.attack_label
+                    target[k] = args.wm_label
                     back_num += 1
                 else:
                     target[k] = -1
@@ -176,7 +176,7 @@ def test_img_wm(net_g, datatest, args, test_backdoor=False):
     return accuracy, test_loss
 
 def test_or_not_wm(args, label):
-    if args.attack_goal != -1:  # one to one
+    if args.wm_goal != -1:  # one to one
         if label == args.wm_goal:  # only attack goal join
             return True
         else:
@@ -249,3 +249,4 @@ def save_img_wm(image):
             pixel_max = np.max(img)
             img /= pixel_max
             io.imsave('./save/wm_test_trigger.png', img_as_ubyte(img))
+# task 1: end

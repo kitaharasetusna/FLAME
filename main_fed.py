@@ -3,7 +3,7 @@
 # Python version: 3.6
 
 from random import random
-from models.test import test_img
+from models.test import test_img, test_img_wm
 from models.Fed import FedAvg
 from models.Nets import ResNet18, vgg19_bn, vgg19, get_model
 
@@ -23,6 +23,7 @@ import os
 import random
 import time
 import math
+from torch.utils.data import Subset
 matplotlib.use('Agg')
 
 
@@ -169,6 +170,25 @@ if __name__ == '__main__':
         print("Aggregation over all clients")
         w_locals = [w_glob for i in range(args.num_users)]
     for iter in range(args.epochs):
+
+        # Task 1: training watermark 
+        if args.watermark == True:
+            print('TODO')
+            # global_update = LocalWaterMarkUpdate(args=args, dataset=dataset_test, idxs=central_dataset,
+            #                                             order=None)
+            # # TODO: channge dataset_test to global_dataset use subdataset
+            # global_dataset = Subset(dataset_test, list(central_dataset))
+            # for _ in range(100):
+            #     global_w, global_loss = global_update.train(
+            #             net=copy.deepcopy(net_glob).to(args.device))
+            #     net_glob.load_state_dict(global_w)
+            #     acc_test, _, wm_acc = test_img_wm(
+            #         net_glob, global_dataset, args, test_backdoor=True)
+            #     print("Main accuracy (global): {:.2f}".format(acc_test))
+            #     print("Backdoor accuracy (global): {:.2f}".format(wm_acc))
+        # Task 1: end
+
+
         loss_locals = []
         if not args.all_clients:
             w_locals = []
