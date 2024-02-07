@@ -117,6 +117,9 @@ def args_parser():
     parser.add_argument('--wm_type', type=str, default='square')
     parser.add_argument('--wm_triggerX', type=int, default=0)
     parser.add_argument('--wm_triggerY', type=int, default=0)
+    parser.add_argument('--wm_label', type=int, default=9)
+    parser.add_argument('--wm_goal', type=int, default=7,
+                        help="trigger to which label")
 
     args = parser.parse_args()
     return args

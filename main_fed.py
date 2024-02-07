@@ -7,7 +7,7 @@ from models.test import test_img
 from models.Fed import FedAvg
 from models.Nets import ResNet18, vgg19_bn, vgg19, get_model
 
-from models.MaliciousUpdate import LocalMaliciousUpdate
+from models.MaliciousUpdate import LocalMaliciousUpdate, LocalWaterMarkUpdate
 from models.Update import LocalUpdate
 from utils.info import print_exp_details, write_info_to_accfile, get_base_info
 from utils.options import args_parser
