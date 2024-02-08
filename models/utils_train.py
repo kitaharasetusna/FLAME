@@ -38,10 +38,9 @@ def add_trigger(images, trigger_type, triggerX, triggerY, dataset):
     return images
 
 
-def train_wm(args, dl_wm, model):
+def train_wm(args, dl_wm, model, optimizer, scheduler):
     # TODO: add this outside
-    optimizer_root = torch.optim.SGD(
-            model.parameters(), lr=args.global_lr, momentum=0.9)
+
     loss_func = nn.CrossEntropyLoss()
     for image, label in dl_wm:
         bad_image, bad_label = copy.deepcopy(image),copy.deepcopy(label)
@@ -55,11 +54,11 @@ def train_wm(args, dl_wm, model):
         images = torch.cat((image, bad_image), dim=0)
         labels = torch.cat((label, bad_label))
         images, labels = images.to('cuda'), labels.to('cuda')
-        optimizer_root.zero_grad()
+        optimizer.zero_grad()
         log_probs = model(images)
         loss = loss_func(log_probs, labels)
         loss.backward()
-        optimizer_root.step()
+        optimizer.step()
         del images, labels
 
 
@@ -95,5 +94,27 @@ def test_watermark(args, model, dl_test, device='cuda'):
             log_probs = model(bad_image)
             y_pred = log_probs.data.max(1, keepdim=True)[1]
             back_correct += y_pred.eq(bad_label.data.view_as(y_pred)).long().cpu().sum()
+        watermark_acc = back_correct/back_num
+    return watermark_acc
+
+
+def test_msr(args, model, dl_test, device='cuda'):
+    '''
+    dl_test: dataset used to test backdoor success rate (BSR)
+    --- backdoor info
+    backdoor_type: trigger/pepper and salt
+    trigger_type: square/pattern/hellow kitty
+    dataset_name: for square ->pick up pixel value for square patch
+    backdoor label: target backdoor/watermark label
+    '''
+    back_num = 0
+    back_correct =0
+    with torch.no_grad():
+        for image, label in dl_test:
+            bad_image, bad_label = image.to(device), label.to(device)
+            log_probs = model(bad_image)
+            y_pred = log_probs.data.max(1, keepdim=True)[1]
+            back_correct += y_pred.eq(bad_label.data.view_as(y_pred)).long().cpu().sum()
+            back_num += len(bad_image)
         watermark_acc = back_correct/back_num
     return watermark_acc

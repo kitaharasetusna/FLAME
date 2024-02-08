@@ -122,7 +122,7 @@ def args_parser():
     parser.add_argument('--wm_goal', type=int, default=7,
                         help="trigger to which label")
     parser.add_argument('--wm_attack', type=str, default='badnet')
-    parser.add_argument('--global_ep', type=int, default=20)
+    parser.add_argument('--global_ep', type=int, default=100)
     parser.add_argument('--global_lr', type=float, default=0.01)
 
     args = parser.parse_args()

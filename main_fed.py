@@ -6,7 +6,7 @@ from random import random
 from models.test import test_img, test_img_wm
 from models.Fed import FedAvg
 from models.Nets import ResNet18, vgg19_bn, vgg19, get_model
-from models.utils_train import train_wm, test_watermark
+from models.utils_train import train_wm, test_watermark, test_msr
 
 from models.MaliciousUpdate import LocalMaliciousUpdate, LocalWaterMarkUpdate
 from models.Update import LocalUpdate
@@ -25,6 +25,7 @@ import random
 import time
 import math
 from torch.utils.data import Subset, DataLoader
+from torch.optim.lr_scheduler import StepLR
 matplotlib.use('Agg')
 
 
@@ -150,6 +151,7 @@ if __name__ == '__main__':
     if args.train_watermark:
         global_dataset = Subset(dataset_test, list(central_dataset))
         dl_global = DataLoader(global_dataset, args.local_bs, shuffle=True)
+        args.global_dl = dl_global
     # taks 1: end
     base_info = get_base_info(args)
     filename = './'+args.save+'/accuracy_file_{}.txt'.format(base_info)
@@ -177,22 +179,31 @@ if __name__ == '__main__':
         print("Aggregation over all clients")
         w_locals = [w_glob for i in range(args.num_users)]
     for iter in range(args.epochs):
+        idx_mali_list = []
 
         # Task 1: training watermark 
         if args.train_watermark == True:
-            print('TODO')
+
+            args.optimizer_root = torch.optim.SGD(
+            net_glob.parameters(), lr=args.global_lr, momentum=0.9)
+            args.scheduler = StepLR(args.optimizer_root, step_size=5, gamma=0.1)
+
             wm_acc_ini = test_watermark(args=args, model=net_glob, dl_test=dl_global)
             print(f'epoch: {iter+1}, watermark accuracy: ', wm_acc_ini)
-            min_wm_acc_init = 0.9
+            min_wm_acc_init = 0.8
+            min_mar_init = 0.0
             if wm_acc_ini<min_wm_acc_init:
                 print(f'watermark accuracy is smaller than {min_wm_acc_init}, start server side training')
                 for idx_glob_epoch in range(args.global_ep):
-                    train_wm(args=args, dl_wm=dl_global, model=net_glob) 
+                    train_wm(args=args, dl_wm=dl_global, model=net_glob, optimizer=args.optimizer_root, 
+                             scheduler=args.scheduler) 
                     wm_acc = test_watermark(args=args, model=net_glob, dl_test=dl_global)
-                    print(f'{idx_glob_epoch+1}: {wm_acc}')
-                    if wm_acc > 0.9:
+                    acc = test_msr(args=args, model=net_glob, dl_test=dl_global)
+                    print(f'{idx_glob_epoch+1}: BSR {wm_acc} MAR {acc}')
+                    if wm_acc > min_wm_acc_init and acc> min_mar_init:
                         break
                 print(f'server side training finished, final accuracy {wm_acc}')
+            
         # Task 1: end
 
 
@@ -212,6 +223,9 @@ if __name__ == '__main__':
                 attack = True
             else:
                 attack = False
+            # # task 0:
+            #     attack = False
+            # # task 0
             if attack == True:
                 idx = random.randint(0, int(args.num_users * args.malicious))
                 if args.attack == "dba":
@@ -227,6 +241,7 @@ if __name__ == '__main__':
                     w, loss = local.train(
                         net=copy.deepcopy(net_glob).to(args.device), test_img = test_img)
                 print("client", idx, "--attack--")
+                idx_mali_list.append(idx)
                 attack_number -= 1
             else:
                 local = LocalUpdate(
@@ -281,6 +296,9 @@ if __name__ == '__main__':
             if args.train_watermark:
                 wm_acc = test_watermark(args=args, model=net_glob, dl_test=dl_global) 
                 print("Watermark accuracy: {: .2f}".format(wm_acc))
+                print("malicious client ids", idx_mali_list)
+                # TODO: ratio of detected clients/malicous clients
+                # TODO: FPT 
             # task 1: end
 
             val_acc_list.append(acc_test.item())

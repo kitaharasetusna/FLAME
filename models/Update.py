@@ -10,6 +10,9 @@ import numpy as np
 import random
 from sklearn import metrics
 import copy
+from torch.optim.lr_scheduler import StepLR
+
+from models.utils_train import add_trigger, train_wm, test_watermark
 # from skimage import io
 
 class DatasetSplit(Dataset):
@@ -34,9 +37,29 @@ class LocalUpdate(object):
             dataset, idxs), batch_size=self.args.local_bs, shuffle=True)
         self.attack_label = args.attack_label
         self.model = args.model
+    
+    # task 1: training watermark 
+    def add_watermark_trigger(self, images, labels):
+        if self.args.wm_goal == -1:
+            bad_data, bad_label = copy.deepcopy(images), copy.deepcopy(labels)
+            for xx in range(len(bad_data)):
+                bad_label[xx] = self.args.wm_label
+                bad_data[xx] = add_trigger(images=bad_data[xx],
+                                        trigger_type=self.args.wm_type,
+                                        triggerX=self.args.wm_triggerX,
+                                        triggerY=self.args.wm_triggerY,
+                                        dataset=self.args.dataset)
+            images = torch.cat((images, bad_data), dim=0)
+            labels = torch.cat((labels, bad_label))
+        else:
+            print('goal specific wm hasnt been finished yet')
+            raise(ValueError)
+        return images, labels
+    # task 1: end
 
     def train(self, net):
         net.train()
+        
         # train and update
         optimizer = torch.optim.SGD(
             net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
@@ -45,6 +68,10 @@ class LocalUpdate(object):
         for iter in range(self.args.local_ep):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
+                # # task 1: training watermark
+                # if self.args.train_watermark:
+                #     images, labels = self.add_watermark_trigger(images=images, labels=labels)
+                # # task 1: end
                 images, labels = images.to(
                     self.args.device), labels.to(self.args.device)
                 net.zero_grad()
@@ -58,6 +85,29 @@ class LocalUpdate(object):
                 #                100. * batch_idx / len(self.ldr_train), loss.item()))
                 batch_loss.append(loss.item())
             epoch_loss.append(sum(batch_loss)/len(batch_loss))
+        
+
+         # task 1:
+        net.train()
+        if self.args.train_watermark:
+            print('client training wm')
+            min_wm_acc_init = 0.9
+            self.wm_optimizer_root = torch.optim.SGD(
+            net.parameters(), lr=self.args.global_lr, momentum=0.9)
+            self.wm_scheduler = StepLR(self.args.optimizer_root, step_size=5, gamma=0.1)
+            wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl)
+            if wm_acc_ini<min_wm_acc_init:
+                for idx_glob_epoch in range(self.args.global_ep):
+                    train_wm(args=self.args, dl_wm=self.args.global_dl, model=net, 
+                                optimizer=self.wm_optimizer_root, 
+                                scheduler=self.wm_scheduler) 
+                    wm_acc = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl)
+                    if wm_acc >= min_wm_acc_init:
+                        print(f'fin wm acc: {wm_acc}')
+                        break 
+        # task 1: end 
+        
+        
         return net.state_dict(), sum(epoch_loss) / len(epoch_loss)
 
     def train_malicious_flipupdate(self, net, test_img=None, dataset_test=None, args=None):

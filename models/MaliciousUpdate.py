@@ -19,6 +19,7 @@ import heapq
 import os
 # print(os.getcwd())
 from models.Attacker import get_attack_layers_no_acc
+from models.utils_train import add_trigger, train_wm, test_watermark
 
 class DatasetSplit(Dataset):
     def __init__(self, dataset, idxs):
@@ -118,8 +119,27 @@ class LocalMaliciousUpdate(object):
             image[image>max_pixel]=max_pixel
         self.save_img(image)
         return image
-    
-            
+
+
+   # task 1: training watermark 
+    def add_watermark_trigger(self, images, labels):
+        if self.args.wm_goal == -1:
+            bad_data, bad_label = copy.deepcopy(images), copy.deepcopy(labels)
+            for xx in range(len(bad_data)):
+                bad_label[xx] = self.args.wm_label
+                bad_data[xx] = add_trigger(images=bad_data[xx],
+                                        trigger_type=self.args.wm_type,
+                                        triggerX=self.args.wm_triggerX,
+                                        triggerY=self.args.wm_triggerY,
+                                        dataset=self.args.dataset)
+            images = torch.cat((images, bad_data), dim=0)
+            labels = torch.cat((labels, bad_label))
+        else:
+            print('goal specific wm hasnt been finished yet')
+            raise(ValueError)
+        return images, labels
+    # task 1: end
+
     def trigger_data(self, images, labels):
         #  attack_goal == -1 means attack all label to attack_label
         if self.attack_goal == -1:
@@ -178,12 +198,29 @@ class LocalMaliciousUpdate(object):
     def train_malicious_badnet(self, net, test_img=None, dataset_test=None, args=None):
         net.train()
         # train and update
+        # task 1:
+        if self.args.train_watermark:
+            min_wm_acc_init = 0.5
+            wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.ldr_train)
+            if wm_acc_ini<min_wm_acc_init:
+                for idx_glob_epoch in range(self.args.global_ep):
+                    train_wm(args=self.args, dl_wm=self.ldr_train, model=net, optimizer=self.args.optimizer_root, 
+                                scheduler=self.args.scheduler) 
+                    wm_acc = test_watermark(args=self.args, model=net, dl_test=self.ldr_train)
+                    if wm_acc > 0.5:
+                        break
+        # task 1: end
         optimizer = torch.optim.SGD(
             net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
         epoch_loss = []
         for iter in range(self.args.local_ep):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
+                # task 1: training watermark
+                if self.args.train_watermark:
+                    # images, labels = self.add_watermark_trigger(images=images, labels=labels)
+                    pass
+                # task 1: end
                 images, labels = self.trigger_data(images, labels)
                 images, labels = images.to(
                     self.args.device), labels.to(self.args.device)
@@ -204,12 +241,22 @@ class LocalMaliciousUpdate(object):
     def train_malicious_dba(self, net, test_img=None, dataset_test=None, args=None):
         net.train()
         # train and update
+        # task 1:
+        if self.args.train_watermark:
+            train_wm(args=self.args, dl_wm=self.ldr_train, model=net, optimizer=args.optimizer_root, 
+                                scheduler=args.scheduler) 
+        # task 1: end
         optimizer = torch.optim.SGD(
             net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
         epoch_loss = []
         for iter in range(self.args.local_ep):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
+                # task 1: training watermark
+                if self.args.train_watermark:
+                    # images, labels = self.add_watermark_trigger(images=images, labels=labels)
+                    pass
+                # task 1: end
                 images, labels = self.trigger_data(images, labels)
                 images, labels = images.to(
                     self.args.device), labels.to(self.args.device)
