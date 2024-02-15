@@ -90,21 +90,28 @@ class LocalUpdate(object):
          # task 1:
         net.train()
         if self.args.train_watermark:
-            print('client training wm')
-            min_wm_acc_init = 0.9
+            min_wm_acc_init = 0.95
             self.wm_optimizer_root = torch.optim.SGD(
             net.parameters(), lr=self.args.global_lr, momentum=0.9)
             self.wm_scheduler = StepLR(self.args.optimizer_root, step_size=5, gamma=0.1)
-            wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl)
+            wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl_te)
             if wm_acc_ini<min_wm_acc_init:
+                # TODO: change this dataset to the training set
                 for idx_glob_epoch in range(self.args.global_ep):
-                    train_wm(args=self.args, dl_wm=self.args.global_dl, model=net, 
+                    train_wm(args=self.args, dl_wm=self.ldr_train, model=net, 
                                 optimizer=self.wm_optimizer_root, 
-                                scheduler=self.wm_scheduler) 
-                    wm_acc = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl)
+                                scheduler=None) 
+                    # TODO: change this dataset to the test dataset
+                    wm_acc = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl_te)
                     if wm_acc >= min_wm_acc_init:
-                        print(f'fin wm acc: {wm_acc}')
+                        wm_acc_ini = wm_acc
                         break 
+                    wm_acc_ini = wm_acc
+            diff_wm_acc = self.args.cur_wm_acc-wm_acc_ini
+            if diff_wm_acc>0:
+                print(f'wm acc drop {self.args.cur_wm_acc-wm_acc_ini}')
+            else:
+                print(f'wm acc drop 0')
         # task 1: end 
         
         

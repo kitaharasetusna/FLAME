@@ -198,28 +198,28 @@ class LocalMaliciousUpdate(object):
     def train_malicious_badnet(self, net, test_img=None, dataset_test=None, args=None):
         net.train()
         # train and update
-        # task 1:
-        if self.args.train_watermark:
-            min_wm_acc_init = 0.5
-            wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.ldr_train)
-            if wm_acc_ini<min_wm_acc_init:
-                for idx_glob_epoch in range(self.args.global_ep):
-                    train_wm(args=self.args, dl_wm=self.ldr_train, model=net, optimizer=self.args.optimizer_root, 
-                                scheduler=self.args.scheduler) 
-                    wm_acc = test_watermark(args=self.args, model=net, dl_test=self.ldr_train)
-                    if wm_acc > 0.5:
-                        break
-        # task 1: end
+        # # task 1:
+        # if self.args.train_watermark:
+        #     min_wm_acc_init = 0.5
+        #     wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.ldr_train)
+        #     if wm_acc_ini<min_wm_acc_init:
+        #         for idx_glob_epoch in range(self.args.global_ep):
+        #             train_wm(args=self.args, dl_wm=self.ldr_train, model=net, optimizer=self.args.optimizer_root, 
+        #                         scheduler=self.args.scheduler) 
+        #             wm_acc = test_watermark(args=self.args, model=net, dl_test=self.ldr_train)
+        #             if wm_acc > 0.5:
+        #                 break
+        # # task 1: end
         optimizer = torch.optim.SGD(
             net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
         epoch_loss = []
         for iter in range(self.args.local_ep):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
-                # task 1: training watermark
-                if self.args.train_watermark:
-                    # images, labels = self.add_watermark_trigger(images=images, labels=labels)
-                    pass
+                # # task 1: training watermark
+                # if self.args.train_watermark:
+                #     # images, labels = self.add_watermark_trigger(images=images, labels=labels)
+                #     pass
                 # task 1: end
                 images, labels = self.trigger_data(images, labels)
                 images, labels = images.to(
@@ -236,16 +236,43 @@ class LocalMaliciousUpdate(object):
                 net, dataset_test, args, test_backdoor=True)
             print("local Testing accuracy: {:.2f}".format(acc_test))
             print("local Backdoor accuracy: {:.2f}".format(backdoor_acc))
+        
+
+         # task 1:
+        net.train()
+        if self.args.train_watermark:
+            min_wm_acc_init = 0.95
+            self.wm_optimizer_root = torch.optim.SGD(
+            net.parameters(), lr=self.args.global_lr, momentum=0.9)
+            wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl_te)
+            if wm_acc_ini<min_wm_acc_init:
+                # TODO: change this dataset to the training set
+                for idx_glob_epoch in range(self.args.global_ep):
+                    train_wm(args=self.args, dl_wm=self.ldr_train, model=net, 
+                                optimizer=self.wm_optimizer_root, 
+                                scheduler= None) 
+                    # TODO: change this dataset to the test dataset
+                    wm_acc = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl_te)
+                    if wm_acc >= min_wm_acc_init:
+                        wm_acc_ini = wm_acc
+                        break 
+                    wm_acc_ini  = wm_acc
+            diff_wm_acc = self.args.cur_wm_acc-wm_acc_ini
+            if diff_wm_acc>0:
+                print(f'wm acc drop {self.args.cur_wm_acc-wm_acc_ini}, wm acc: {wm_acc_ini}')
+            else:
+                print(f'wm acc drop 0')
+        # task 1: end
         return net.state_dict(), sum(epoch_loss) / len(epoch_loss)
     
     def train_malicious_dba(self, net, test_img=None, dataset_test=None, args=None):
         net.train()
         # train and update
-        # task 1:
-        if self.args.train_watermark:
-            train_wm(args=self.args, dl_wm=self.ldr_train, model=net, optimizer=args.optimizer_root, 
-                                scheduler=args.scheduler) 
-        # task 1: end
+        # # task 1:
+        # if self.args.train_watermark:
+        #     train_wm(args=self.args, dl_wm=self.ldr_train, model=net, optimizer=args.optimizer_root, 
+        #                         scheduler=args.scheduler) 
+        # # task 1: end
         optimizer = torch.optim.SGD(
             net.parameters(), lr=self.args.lr, momentum=self.args.momentum)
         epoch_loss = []
@@ -253,10 +280,10 @@ class LocalMaliciousUpdate(object):
             batch_loss = []
             for batch_idx, (images, labels) in enumerate(self.ldr_train):
                 # task 1: training watermark
-                if self.args.train_watermark:
-                    # images, labels = self.add_watermark_trigger(images=images, labels=labels)
-                    pass
-                # task 1: end
+                # if self.args.train_watermark:
+                #     # images, labels = self.add_watermark_trigger(images=images, labels=labels)
+                #     pass
+                # # task 1: end
                 images, labels = self.trigger_data(images, labels)
                 images, labels = images.to(
                     self.args.device), labels.to(self.args.device)
@@ -272,6 +299,32 @@ class LocalMaliciousUpdate(object):
                 net, dataset_test, args, test_backdoor=True)
             print("local Testing accuracy: {:.2f}".format(acc_test))
             print("local Backdoor accuracy: {:.2f}".format(backdoor_acc))
+
+         # task 1:
+        net.train()
+        if self.args.train_watermark:
+            min_wm_acc_init = 0.95
+            self.wm_optimizer_root = torch.optim.SGD(
+            net.parameters(), lr=self.args.global_lr, momentum=0.9)
+            wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl_te)
+            if wm_acc_ini<min_wm_acc_init:
+                # TODO: change this dataset to the training set
+                for idx_glob_epoch in range(self.args.global_ep):
+                    train_wm(args=self.args, dl_wm=self.ldr_train, model=net, 
+                                optimizer=self.wm_optimizer_root, 
+                                scheduler= None) 
+                    # TODO: change this dataset to the test dataset
+                    wm_acc = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl_te)
+                    if wm_acc >= min_wm_acc_init:
+                        wm_acc_ini = wm_acc
+                        break 
+                    wm_acc_ini  = wm_acc
+            diff_wm_acc = self.args.cur_wm_acc-wm_acc_ini
+            if diff_wm_acc>0:
+                print(f'wm acc drop {self.args.cur_wm_acc-wm_acc_ini}, wm acc: {wm_acc_ini}')
+            else:
+                print(f'wm acc drop 0')
+        # task 1: end
         return net.state_dict(), sum(epoch_loss) / len(epoch_loss)
         
 
