@@ -27,6 +27,7 @@ import math
 from torch.utils.data import Subset, DataLoader, random_split
 from torch.optim.lr_scheduler import StepLR
 matplotlib.use('Agg')
+import pickle
 
 
 def write_file(filename, accu_list, back_list, args, analyse = False):
@@ -204,7 +205,7 @@ if __name__ == '__main__':
                 print('pretrain watermark')
                 for idx_glob_epoch in range(100):
                     args.optimizer_root = torch.optim.Adam(
-                    net_glob.parameters(), lr=0.01)
+                    net_glob.parameters(), lr=0.001)
                     args.scheduler = StepLR(args.optimizer_root, step_size=5, gamma=0.1)
                     train_wm(args=args, dl_wm=args.global_dl_tr, model=net_glob, optimizer=args.optimizer_root, 
                                 scheduler=args.scheduler) 
@@ -216,7 +217,7 @@ if __name__ == '__main__':
                 print(f'server side training finished, final accuracy {wm_acc}')
                 torch.save(net_glob.state_dict(), 'pretrained_resnet18_cifar.pth')
 
-            if wm_acc_ini<min_wm_acc_init:
+            if wm_acc_ini<min_wm_acc_init and iter!=0:
                 print(f'watermark accuracy is smaller than {min_wm_acc_init}, start server side training')
                 for idx_glob_epoch in range(args.global_ep):
                     train_wm(args=args, dl_wm=args.global_dl_tr, model=net_glob, optimizer=args.optimizer_root, 
@@ -322,6 +323,13 @@ if __name__ == '__main__':
                 wm_acc = test_watermark(args=args, model=net_glob, dl_test=args.global_dl_te) 
                 print("Watermark accuracy: {: .2f}".format(wm_acc*100))
                 print("malicious client ids", idx_mali_list)
+                watermark_acculist.append(wm_acc*100) 
+                with open('wm_acc.pkl', 'wb') as f:
+                    pickle.dump(watermark_acculist, f) 
+                
+                with open('wm_acc.pkl', 'rb') as f:
+                    ls = pickle.load(f)
+                    print(ls)
                 # TODO: ratio of detected clients/malicous clients
                 # TODO: FPT 
             # task 1: end
