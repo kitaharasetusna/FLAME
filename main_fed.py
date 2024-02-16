@@ -189,25 +189,27 @@ if __name__ == '__main__':
         # Task 1: training watermark 
         if args.train_watermark == True:
 
-            args.optimizer_root = torch.optim.SGD(
-            net_glob.parameters(), lr=args.global_lr, momentum=0.9)
+            # args.optimizer_root = torch.optim.SGD(
+            # net_glob.parameters(), lr=args.global_lr, momentum=0.9)
+            args.optimizer_root = torch.optim.Adam(
+            net_glob.parameters(), lr=args.global_lr)
             args.scheduler = StepLR(args.optimizer_root, step_size=5, gamma=0.1)
 
             wm_acc_ini = test_watermark(args=args, model=net_glob, dl_test=args.global_dl_te)
             print(f'epoch: {iter+1}, watermark accuracy: ', wm_acc_ini)
-            # min_wm_acc_init = 0.95
-            # min_mar_init = 0.0
-            # if wm_acc_ini<min_wm_acc_init:
-            #     print(f'watermark accuracy is smaller than {min_wm_acc_init}, start server side training')
-            #     for idx_glob_epoch in range(args.global_ep):
-            #         train_wm(args=args, dl_wm=args.global_dl_tr, model=net_glob, optimizer=args.optimizer_root, 
-            #                  scheduler=args.scheduler) 
-            #         wm_acc = test_watermark(args=args, model=net_glob, dl_test=args.global_dl_te)
-            #         acc = test_msr(args=args, model=net_glob, dl_test=args.global_dl_te)
-            #         print(f'{idx_glob_epoch+1}: BSR {wm_acc} MAR {acc}')
-            #         if wm_acc > min_wm_acc_init and acc> min_mar_init:
-            #             break
-            #     print(f'server side training finished, final accuracy {wm_acc}')
+            min_wm_acc_init = 0.95
+            min_mar_init = 0.0
+            if wm_acc_ini<min_wm_acc_init:
+                print(f'watermark accuracy is smaller than {min_wm_acc_init}, start server side training')
+                for idx_glob_epoch in range(args.global_ep):
+                    train_wm(args=args, dl_wm=args.global_dl_tr, model=net_glob, optimizer=args.optimizer_root, 
+                             scheduler=args.scheduler) 
+                    wm_acc = test_watermark(args=args, model=net_glob, dl_test=args.global_dl_te)
+                    acc = test_msr(args=args, model=net_glob, dl_test=args.global_dl_te)
+                    print(f'{idx_glob_epoch+1}: BSR {wm_acc} MAR {acc}')
+                    if wm_acc > min_wm_acc_init and acc> min_mar_init:
+                        break
+                print(f'server side training finished, final accuracy {wm_acc}')
             args.cur_wm_acc = wm_acc_ini
             
         # Task 1: end
@@ -301,7 +303,7 @@ if __name__ == '__main__':
             # task 1: training watermark
             if args.train_watermark:
                 wm_acc = test_watermark(args=args, model=net_glob, dl_test=args.global_dl_te) 
-                print("Watermark accuracy: {: .2f}".format(wm_acc))
+                print("Watermark accuracy: {: .2f}".format(wm_acc*100))
                 print("malicious client ids", idx_mali_list)
                 # TODO: ratio of detected clients/malicous clients
                 # TODO: FPT 

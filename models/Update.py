@@ -91,8 +91,10 @@ class LocalUpdate(object):
         net.train()
         if self.args.train_watermark:
             min_wm_acc_init = 0.95
-            self.wm_optimizer_root = torch.optim.SGD(
-            net.parameters(), lr=self.args.global_lr, momentum=0.9)
+            # self.wm_optimizer_root = torch.optim.SGD(
+            # net.parameters(), lr=self.args.global_lr, momentum=0.9)
+            self.wm_optimizer_root  = torch.optim.Adam(
+            net.parameters(), lr=self.args.global_lr)
             self.wm_scheduler = StepLR(self.args.optimizer_root, step_size=5, gamma=0.1)
             wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl_te)
             if wm_acc_ini<min_wm_acc_init:
@@ -112,6 +114,7 @@ class LocalUpdate(object):
                 print(f'wm acc drop {self.args.cur_wm_acc-wm_acc_ini}')
             else:
                 print(f'wm acc drop 0')
+            print(f'wm acc: {wm_acc_ini}')
         # task 1: end 
         
         

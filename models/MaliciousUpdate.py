@@ -242,8 +242,10 @@ class LocalMaliciousUpdate(object):
         net.train()
         if self.args.train_watermark:
             min_wm_acc_init = 0.95
-            self.wm_optimizer_root = torch.optim.SGD(
-            net.parameters(), lr=self.args.global_lr, momentum=0.9)
+            # self.wm_optimizer_root = torch.optim.SGD(
+            # net.parameters(), lr=self.args.global_lr, momentum=0.9)
+            self.wm_optimizer_root  = torch.optim.Adam(
+            net.parameters(), lr=self.args.global_lr)
             wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl_te)
             if wm_acc_ini<min_wm_acc_init:
                 # TODO: change this dataset to the training set
@@ -304,8 +306,10 @@ class LocalMaliciousUpdate(object):
         net.train()
         if self.args.train_watermark:
             min_wm_acc_init = 0.95
-            self.wm_optimizer_root = torch.optim.SGD(
-            net.parameters(), lr=self.args.global_lr, momentum=0.9)
+            # self.wm_optimizer_root = torch.optim.SGD(
+            # net.parameters(), lr=self.args.global_lr, momentum=0.9)
+            self.wm_optimizer_root  = torch.optim.Adam(
+            net.parameters(), lr=self.args.global_lr)
             wm_acc_ini = test_watermark(args=self.args, model=net, dl_test=self.args.global_dl_te)
             if wm_acc_ini<min_wm_acc_init:
                 # TODO: change this dataset to the training set
