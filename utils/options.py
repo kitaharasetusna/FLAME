@@ -124,6 +124,8 @@ def args_parser():
     parser.add_argument('--wm_attack', type=str, default='badnet')
     parser.add_argument('--global_ep', type=int, default=100)
     parser.add_argument('--global_lr', type=float, default=0.01)
+    parser.add_argument('--pretraining', action='store_true',
+                        help='pretrain watermark')
 
     args = parser.parse_args()
     return args

@@ -199,6 +199,23 @@ if __name__ == '__main__':
             print(f'epoch: {iter+1}, watermark accuracy: ', wm_acc_ini)
             min_wm_acc_init = 0.95
             min_mar_init = 0.0
+            print(iter==0)
+            if args.pretraining == True and iter==0:
+                print('pretrain watermark')
+                for idx_glob_epoch in range(100):
+                    args.optimizer_root = torch.optim.Adam(
+                    net_glob.parameters(), lr=0.01)
+                    args.scheduler = StepLR(args.optimizer_root, step_size=5, gamma=0.1)
+                    train_wm(args=args, dl_wm=args.global_dl_tr, model=net_glob, optimizer=args.optimizer_root, 
+                                scheduler=args.scheduler) 
+                    wm_acc = test_watermark(args=args, model=net_glob, dl_test=args.global_dl_te)
+                    acc = test_msr(args=args, model=net_glob, dl_test=args.global_dl_te)
+                    print(f'{idx_glob_epoch+1}: BSR {wm_acc} MAR {acc}')
+                    # if wm_acc > min_wm_acc_init and acc> min_mar_init:
+                    #     break
+                print(f'server side training finished, final accuracy {wm_acc}')
+                torch.save(net_glob.state_dict(), 'pretrained_resnet18_cifar.pth')
+
             if wm_acc_ini<min_wm_acc_init:
                 print(f'watermark accuracy is smaller than {min_wm_acc_init}, start server side training')
                 for idx_glob_epoch in range(args.global_ep):
