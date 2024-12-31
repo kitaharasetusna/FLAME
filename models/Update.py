@@ -124,7 +124,7 @@ class LocalUpdate(object):
         global_net_dict = copy.deepcopy(net.state_dict())
         #*****save model********
         # benign_dict, _ = self.train(copy.deepcopy(net))
-        # torch.save(benign_dict,'./save/benign.pt')
+        # torch.save(benign_dict,'../save/benign.pt')
         net.train()
         # train and update
         optimizer = torch.optim.SGD(
@@ -159,7 +159,7 @@ class LocalUpdate(object):
             print("local Backdoor accuracy: {:.2f}".format(backdoor_acc))
         attack_list=['linear.weight','conv1.weight','layer4.1.conv2.weight','layer4.1.conv1.weight','layer4.0.conv2.weight','layer4.0.conv1.weight']
         #*****save model********
-        # torch.save(net.state_dict(),'./save/malicious.pt')
+        # torch.save(net.state_dict(),'../save/malicious.pt')
         # attack_list=['fc1.weight']
         attack_weight = {}
         for key, var in net.state_dict().items():

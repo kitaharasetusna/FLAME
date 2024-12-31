@@ -61,9 +61,9 @@ python3 main_fed.py      --dataset cifar,fashion_mnist \
                         --iid 0,1 
 ```
 
-Images with triggers on attack process and test process are shown in './save' when running.
-Results files are saved in './save' by default, including a figure and a accuracy record.
-More default parameters on different defense strategies or attack can be seen in './utils/options'.
+Images with triggers on attack process and test process are shown in '../save' when running.
+Results files are saved in '../save' by default, including a figure and a accuracy record.
+More default parameters on different defense strategies or attack can be seen in '../utils/options'.
 
 ## FedAVG v.s. BadNet
 ```

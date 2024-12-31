@@ -73,7 +73,7 @@ def add_trigger(args, image):
             image[:,args.triggerY+1,args.triggerX-1] = pixel_max
         elif args.trigger == 'watermark':
             if args.watermark is None:
-                args.watermark = cv2.imread('./utils/watermark.png', cv2.IMREAD_GRAYSCALE)
+                args.watermark = cv2.imread('../utils/watermark.png', cv2.IMREAD_GRAYSCALE)
                 args.watermark = cv2.bitwise_not(args.watermark)
                 args.watermark = cv2.resize(args.watermark, dsize=image[0].shape, interpolation=cv2.INTER_CUBIC)
                 pixel_max = np.max(args.watermark)
@@ -86,7 +86,7 @@ def add_trigger(args, image):
             image[image>max_pixel]=max_pixel
         elif args.trigger == 'apple':
             if args.apple is None:
-                args.apple = cv2.imread('./utils/apple.png', cv2.IMREAD_GRAYSCALE)
+                args.apple = cv2.imread('../utils/apple.png', cv2.IMREAD_GRAYSCALE)
                 args.apple = cv2.bitwise_not(args.apple)
                 args.apple = cv2.resize(args.apple, dsize=image[0].shape, interpolation=cv2.INTER_CUBIC)
                 pixel_max = np.max(args.apple)
@@ -228,9 +228,9 @@ def get_attacker_dataset(args):
         dataset_test = datasets.CIFAR10(
             '../data/cifar', train=False, download=True, transform=trans_cifar)
         if args.iid:
-            client_proportion = np.load('./data/iid_cifar.npy', allow_pickle=True).item()
+            client_proportion = np.load('../data/iid_cifar.npy', allow_pickle=True).item()
         else:
-            client_proportion = np.load('./data/non_iid_cifar.npy', allow_pickle=True).item()
+            client_proportion = np.load('../data/non_iid_cifar.npy', allow_pickle=True).item()
     elif args.dataset == "fashion_mnist":
         trans_mnist = transforms.Compose([transforms.ToTensor(), transforms.Normalize(mean=[0.2860], std=[0.3530])])
         dataset_train = datasets.FashionMNIST(
@@ -238,9 +238,9 @@ def get_attacker_dataset(args):
         dataset_test = datasets.FashionMNIST(
             '../data/', train=False, download=True, transform=trans_mnist)
         if args.iid:
-            client_proportion = np.load('./data/iid_fashion_mnist.npy', allow_pickle=True).item()
+            client_proportion = np.load('../data/iid_fashion_mnist.npy', allow_pickle=True).item()
         else:
-            client_proportion = np.load('./data/non_iid_fashion_mnist.npy', allow_pickle=True).item()
+            client_proportion = np.load('../data/non_iid_fashion_mnist.npy', allow_pickle=True).item()
             
     data_list=[]
     begin_pos=0

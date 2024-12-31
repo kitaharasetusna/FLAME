@@ -93,7 +93,7 @@ class LocalMaliciousUpdate(object):
             image[:,self.triggerY+1,self.triggerX-1] = pixel_max
         elif self.trigger == 'watermark':
             if self.watermark is None:
-                self.watermark = cv2.imread('./utils/watermark.png', cv2.IMREAD_GRAYSCALE)
+                self.watermark = cv2.imread('../utils/watermark.png', cv2.IMREAD_GRAYSCALE)
                 self.watermark = cv2.bitwise_not(self.watermark)
                 self.watermark = cv2.resize(self.watermark, dsize=image[0].shape, interpolation=cv2.INTER_CUBIC)
                 pixel_max = np.max(self.watermark)
@@ -106,7 +106,7 @@ class LocalMaliciousUpdate(object):
             image[image>max_pixel]=max_pixel
         elif self.trigger == 'apple':
             if self.apple is None:
-                self.apple = cv2.imread('./utils/apple.png', cv2.IMREAD_GRAYSCALE)
+                self.apple = cv2.imread('../utils/apple.png', cv2.IMREAD_GRAYSCALE)
                 self.apple = cv2.bitwise_not(self.apple)
                 self.apple = cv2.resize(self.apple, dsize=image[0].shape, interpolation=cv2.INTER_CUBIC)
                 pixel_max = np.max(self.apple)
@@ -339,7 +339,7 @@ class LocalMaliciousUpdate(object):
             img -= pixel_min
             pixel_max = torch.max(img)
             img /= pixel_max
-            io.imsave('./save/backdoor_trigger.png', img_as_ubyte(img.squeeze().numpy()))
+            io.imsave('../save/backdoor_trigger.png', img_as_ubyte(img.squeeze().numpy()))
         else:
             img = image.numpy()
             img = img.transpose(1, 2, 0)
@@ -348,8 +348,8 @@ class LocalMaliciousUpdate(object):
             pixel_max = np.max(img)
             img /= pixel_max
             if self.attack == 'dba':
-                io.imsave('./save/dba'+str(self.dba_class)+'_trigger.png', img_as_ubyte(img))
-            io.imsave('./save/backdoor_trigger.png', img_as_ubyte(img))
+                io.imsave('../save/dba'+str(self.dba_class)+'_trigger.png', img_as_ubyte(img))
+            io.imsave('../save/backdoor_trigger.png', img_as_ubyte(img))
 
 
 # task 1: watermark training
@@ -409,7 +409,7 @@ class LocalWaterMarkUpdate(object):
             image[:,self.triggerY+1,self.triggerX-1] = pixel_max
         elif self.trigger == 'watermark':
             if self.watermark is None:
-                self.watermark = cv2.imread('./utils/watermark.png', cv2.IMREAD_GRAYSCALE)
+                self.watermark = cv2.imread('../utils/watermark.png', cv2.IMREAD_GRAYSCALE)
                 self.watermark = cv2.bitwise_not(self.watermark)
                 self.watermark = cv2.resize(self.watermark, dsize=image[0].shape, interpolation=cv2.INTER_CUBIC)
                 pixel_max = np.max(self.watermark)
@@ -422,7 +422,7 @@ class LocalWaterMarkUpdate(object):
             image[image>max_pixel]=max_pixel
         elif self.trigger == 'apple':
             if self.apple is None:
-                self.apple = cv2.imread('./utils/apple.png', cv2.IMREAD_GRAYSCALE)
+                self.apple = cv2.imread('../utils/apple.png', cv2.IMREAD_GRAYSCALE)
                 self.apple = cv2.bitwise_not(self.apple)
                 self.apple = cv2.resize(self.apple, dsize=image[0].shape, interpolation=cv2.INTER_CUBIC)
                 pixel_max = np.max(self.apple)
@@ -553,7 +553,7 @@ class LocalWaterMarkUpdate(object):
             img -= pixel_min
             pixel_max = torch.max(img)
             img /= pixel_max
-            io.imsave('./save/watermark_trigger.png', img_as_ubyte(img.squeeze().numpy()))
+            io.imsave('../save/watermark_trigger.png', img_as_ubyte(img.squeeze().numpy()))
         else:
             img = image.numpy()
             img = img.transpose(1, 2, 0)
@@ -562,5 +562,5 @@ class LocalWaterMarkUpdate(object):
             pixel_max = np.max(img)
             img /= pixel_max
             if self.attack == 'dba':
-                io.imsave('./save/watermark_dba'+str(self.dba_class)+'_trigger.png', img_as_ubyte(img))
-            io.imsave('./save/watermark_trigger.png', img_as_ubyte(img))
+                io.imsave('../save/watermark_dba'+str(self.dba_class)+'_trigger.png', img_as_ubyte(img))
+            io.imsave('../save/watermark_trigger.png', img_as_ubyte(img))

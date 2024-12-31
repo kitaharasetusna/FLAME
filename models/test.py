@@ -87,7 +87,7 @@ def add_trigger(args, image):
             image[:,args.triggerY+1,args.triggerX-1] = pixel_max
         elif args.trigger == 'watermark':
             if args.watermark is None:
-                args.watermark = cv2.imread('./utils/watermark.png', cv2.IMREAD_GRAYSCALE)
+                args.watermark = cv2.imread('../utils/watermark.png', cv2.IMREAD_GRAYSCALE)
                 args.watermark = cv2.bitwise_not(args.watermark)
                 args.watermark = cv2.resize(args.watermark, dsize=image[0].shape, interpolation=cv2.INTER_CUBIC)
                 pixel_max = np.max(args.watermark)
@@ -100,7 +100,7 @@ def add_trigger(args, image):
             image[image>max_pixel]=max_pixel
         elif args.trigger == 'apple':
             if args.apple is None:
-                args.apple = cv2.imread('./utils/apple.png', cv2.IMREAD_GRAYSCALE)
+                args.apple = cv2.imread('../utils/apple.png', cv2.IMREAD_GRAYSCALE)
                 args.apple = cv2.bitwise_not(args.apple)
                 args.apple = cv2.resize(args.apple, dsize=image[0].shape, interpolation=cv2.INTER_CUBIC)
                 pixel_max = np.max(args.apple)
@@ -119,7 +119,7 @@ def save_img(image):
             img -= pixel_min
             pixel_max = torch.max(img)
             img /= pixel_max
-            io.imsave('./save/test_trigger.png', img_as_ubyte(img.squeeze().cpu().numpy()))
+            io.imsave('../save/test_trigger.png', img_as_ubyte(img.squeeze().cpu().numpy()))
         else:
             img = image.cpu().numpy()
             img = img.transpose(1, 2, 0)
@@ -127,7 +127,7 @@ def save_img(image):
             img -= pixel_min
             pixel_max = np.max(img)
             img /= pixel_max
-            io.imsave('./save/test_trigger.png', img_as_ubyte(img))
+            io.imsave('../save/test_trigger.png', img_as_ubyte(img))
 
 
 # task 1: train watermark
@@ -208,7 +208,7 @@ def add_trigger_wm(args, image):
             image[:,args.wm_triggerY+1,args.wm_triggerX-1] = pixel_max
         elif args.wm_type== 'watermark':
             if args.watermark is None:
-                args.watermark = cv2.imread('./utils/watermark.png', cv2.IMREAD_GRAYSCALE)
+                args.watermark = cv2.imread('../utils/watermark.png', cv2.IMREAD_GRAYSCALE)
                 args.watermark = cv2.bitwise_not(args.watermark)
                 args.watermark = cv2.resize(args.watermark, dsize=image[0].shape, interpolation=cv2.INTER_CUBIC)
                 pixel_max = np.max(args.watermark)
@@ -221,7 +221,7 @@ def add_trigger_wm(args, image):
             image[image>max_pixel]=max_pixel
         elif args.wm_type == 'apple':
             if args.apple is None:
-                args.apple = cv2.imread('./utils/apple.png', cv2.IMREAD_GRAYSCALE)
+                args.apple = cv2.imread('../utils/apple.png', cv2.IMREAD_GRAYSCALE)
                 args.apple = cv2.bitwise_not(args.apple)
                 args.apple = cv2.resize(args.apple, dsize=image[0].shape, interpolation=cv2.INTER_CUBIC)
                 pixel_max = np.max(args.apple)
@@ -240,7 +240,7 @@ def save_img_wm(image):
             img -= pixel_min
             pixel_max = torch.max(img)
             img /= pixel_max
-            io.imsave('./save/wm_test_trigger.png', img_as_ubyte(img.squeeze().cpu().numpy()))
+            io.imsave('../save/wm_test_trigger.png', img_as_ubyte(img.squeeze().cpu().numpy()))
         else:
             img = image.cpu().numpy()
             img = img.transpose(1, 2, 0)
@@ -248,5 +248,5 @@ def save_img_wm(image):
             img -= pixel_min
             pixel_max = np.max(img)
             img /= pixel_max
-            io.imsave('./save/wm_test_trigger.png', img_as_ubyte(img))
+            io.imsave('../save/wm_test_trigger.png', img_as_ubyte(img))
 # task 1: end

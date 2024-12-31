@@ -79,7 +79,7 @@ if __name__ == '__main__':
     args = args_parser()
     args.device = torch.device('cuda:{}'.format(
         args.gpu) if torch.cuda.is_available() and args.gpu != -1 else 'cpu')
-    test_mkdir('./'+args.save)
+    test_mkdir('../'+args.save)
     print_exp_details(args)
     
     # load dataset and split users
@@ -103,9 +103,9 @@ if __name__ == '__main__':
             '../data/', train=False, download=True, transform=trans_mnist)
         # sample users
         if args.iid:
-            dict_users = np.load('./data/iid_fashion_mnist.npy', allow_pickle=True).item()
+            dict_users = np.load('../data/iid_fashion_mnist.npy', allow_pickle=True).item()
         else:
-            dict_users = np.load('./data/non_iid_fashion_mnist.npy', allow_pickle=True).item()
+            dict_users = np.load('../data/non_iid_fashion_mnist.npy', allow_pickle=True).item()
     elif args.dataset == 'cifar':
         trans_cifar = transforms.Compose(
             [transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
@@ -114,9 +114,9 @@ if __name__ == '__main__':
         dataset_test = datasets.CIFAR10(
             '../data/cifar', train=False, download=True, transform=trans_cifar)
         if args.iid:
-            dict_users = np.load('./data/iid_cifar.npy', allow_pickle=True).item()
+            dict_users = np.load('../data/iid_cifar.npy', allow_pickle=True).item()
         else:
-            dict_users = np.load('./data/non_iid_cifar.npy', allow_pickle=True).item()
+            dict_users = np.load('../data/non_iid_cifar.npy', allow_pickle=True).item()
     else:
         exit('Error: unrecognized dataset')
     img_size = dataset_train[0][0].shape
@@ -160,7 +160,7 @@ if __name__ == '__main__':
 
     # taks 1: end
     base_info = get_base_info(args)
-    filename = './'+args.save+'/accuracy_file_{}.txt'.format(base_info)
+    filename = '../'+args.save+'/accuracy_file_{}.txt'.format(base_info)
     
     if args.init != 'None':
         param = torch.load(args.init)
@@ -186,52 +186,6 @@ if __name__ == '__main__':
         w_locals = [w_glob for i in range(args.num_users)]
     for iter in range(args.epochs):
         idx_mali_list = []
-
-        # Task 1: training watermark 
-        if args.train_watermark == True:
-
-            # args.optimizer_root = torch.optim.SGD(
-            # net_glob.parameters(), lr=args.global_lr, momentum=0.9)
-            args.optimizer_root = torch.optim.Adam(
-            net_glob.parameters(), lr=args.global_lr)
-            args.scheduler = StepLR(args.optimizer_root, step_size=5, gamma=0.1)
-
-            wm_acc_ini = test_watermark(args=args, model=net_glob, dl_test=args.global_dl_te)
-            print(f'epoch: {iter+1}, watermark accuracy: ', wm_acc_ini)
-            min_wm_acc_init = 0.95
-            min_mar_init = 0.0
-            print(iter==0)
-            if args.pretraining == True and iter==0:
-                print('pretrain watermark')
-                for idx_glob_epoch in range(100):
-                    args.optimizer_root = torch.optim.Adam(
-                    net_glob.parameters(), lr=0.001)
-                    args.scheduler = StepLR(args.optimizer_root, step_size=5, gamma=0.1)
-                    train_wm(args=args, dl_wm=args.global_dl_tr, model=net_glob, optimizer=args.optimizer_root, 
-                                scheduler=args.scheduler) 
-                    wm_acc = test_watermark(args=args, model=net_glob, dl_test=args.global_dl_te)
-                    acc = test_msr(args=args, model=net_glob, dl_test=args.global_dl_te)
-                    print(f'{idx_glob_epoch+1}: BSR {wm_acc} MAR {acc}')
-                    # if wm_acc > min_wm_acc_init and acc> min_mar_init:
-                    #     break
-                print(f'server side training finished, final accuracy {wm_acc}')
-                torch.save(net_glob.state_dict(), 'pretrained_resnet18_cifar.pth')
-
-            if wm_acc_ini<min_wm_acc_init and iter!=0:
-                print(f'watermark accuracy is smaller than {min_wm_acc_init}, start server side training')
-                for idx_glob_epoch in range(args.global_ep):
-                    train_wm(args=args, dl_wm=args.global_dl_tr, model=net_glob, optimizer=args.optimizer_root, 
-                             scheduler=args.scheduler) 
-                    wm_acc = test_watermark(args=args, model=net_glob, dl_test=args.global_dl_te)
-                    acc = test_msr(args=args, model=net_glob, dl_test=args.global_dl_te)
-                    print(f'{idx_glob_epoch+1}: BSR {wm_acc} MAR {acc}')
-                    if wm_acc > min_wm_acc_init and acc> min_mar_init:
-                        break
-                print(f'server side training finished, final accuracy {wm_acc}')
-            args.cur_wm_acc = wm_acc_ini
-            
-        # Task 1: end
-
 
         loss_locals = []
         if not args.all_clients:
@@ -318,21 +272,7 @@ if __name__ == '__main__':
             print("Main accuracy: {:.2f}".format(acc_test))
             print("Backdoor accuracy: {:.2f}".format(back_acc))
 
-            # task 1: training watermark
-            if args.train_watermark:
-                wm_acc = test_watermark(args=args, model=net_glob, dl_test=args.global_dl_te) 
-                print("Watermark accuracy: {: .2f}".format(wm_acc*100))
-                print("malicious client ids", idx_mali_list)
-                watermark_acculist.append(wm_acc*100) 
-                with open('wm_acc.pkl', 'wb') as f:
-                    pickle.dump(watermark_acculist, f) 
-                
-                with open('wm_acc.pkl', 'rb') as f:
-                    ls = pickle.load(f)
-                    print(ls)
-                # TODO: ratio of detected clients/malicous clients
-                # TODO: FPT 
-            # task 1: end
+            torch.save(net_glob.state_dict(), f'../{args.save}/global_model.pth')
 
             val_acc_list.append(acc_test.item())
 
@@ -351,7 +291,7 @@ if __name__ == '__main__':
     title = base_info
     # plt.title(title, y=-0.3)
     plt.title(title)
-    plt.savefig('./'+args.save +'/'+ title + '.pdf', format = 'pdf',bbox_inches='tight')
+    plt.savefig('../'+args.save +'/'+ title + '.pdf', format = 'pdf',bbox_inches='tight')
     
     
     # testing

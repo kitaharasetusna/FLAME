@@ -16,7 +16,7 @@ def write_info_to_accfile(filename, args):
     f.close()    
     
 def write_info(args, info):
-    f = open("./"+args.save+'/'+"a_info.txt", "w")
+    f = open("../"+args.save+'/'+"a_info.txt", "w")
     for i in info:
         f.write(i)
         f.write('\n')
