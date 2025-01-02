@@ -11,8 +11,6 @@ import cv2
 from skimage import img_as_ubyte
 import numpy as np
 def test_img(net_g, datatest, args, test_backdoor=False):
-    args.watermark = None
-    args.apple = None
     net_g.eval()
     # testing
     test_loss = 0
