@@ -35,7 +35,7 @@ print("Main accuracy: {:.2f}".format(acc_test))
 print("Backdoor accuracy: {:.2f}".format(back_acc))
 
 #   2 PURIFY POISONED MODEL
-bs_root = 256; lr_ft = 3e-4; epoch_ibau = 20; adam_betas=[0.9, 0.999]; wd=0; K=5 
+bs_root = 256; lr_ft = 1e-4; epoch_ibau = 20; adam_betas=[0.9, 0.999]; wd=0; K=5 
 input_height, input_width = 32, 32
 
 
@@ -89,6 +89,7 @@ for round in range(epoch_ibau):
     # batch_pert = torch.zeros_like(data_clean_testset[0][:1], requires_grad=True, device=args.device)
     batch_pert = torch.zeros([1,3,input_height,input_width], requires_grad=True, device=args.device)
     batch_opt = torch.optim.SGD(params=[batch_pert],lr=10)
+    # batch_opt = torch.optim.Adam(params=[batch_pert], lr=0.0001)
 
     loss_sum = 0.0
     for images, labels in loader_root:
@@ -105,8 +106,8 @@ for round in range(epoch_ibau):
         loss_sum+=loss_regu.item()
     
     #l2-ball
-    pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
-    # pert = batch_pert
+    # pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
+    pert = batch_pert
 
     #unlearn step         
     for batchnum in range(len(images_list)): 

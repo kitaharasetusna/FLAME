@@ -105,8 +105,8 @@ for round in range(epoch_ibau):
         loss_sum+=loss_regu.item()
     
     #l2-ball
-    pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
-    # pert = batch_pert
+    #pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
+    pert = batch_pert
 
     #unlearn step         
     for batchnum in range(len(images_list)): 
