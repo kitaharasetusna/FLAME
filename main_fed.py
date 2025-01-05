@@ -272,7 +272,7 @@ if __name__ == '__main__':
             print("Main accuracy: {:.2f}".format(acc_test))
             print("Backdoor accuracy: {:.2f}".format(back_acc))
 
-            torch.save(net_glob.state_dict(), f'../{args.save}/global_model.pth')
+            torch.save(net_glob.state_dict(), f'../{args.save}/global_model_{args.epochs}.pth')
 
             val_acc_list.append(acc_test.item())
 

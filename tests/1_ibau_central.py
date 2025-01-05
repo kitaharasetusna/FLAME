@@ -25,7 +25,7 @@ dict_users = np.load('../data/iid_cifar.npy', allow_pickle=True).item()
 
 args.device = torch.device('cuda:{}'.format(0) if torch.cuda.is_available() else 'cpu')
 model = ResNet18().to(args.device)
-path_net_glob_weight = f'./poisoned_model.pth'
+path_net_glob_weight = f'./poisoned_model_ASR89_ACC73.pth'
 model.load_state_dict(torch.load(path_net_glob_weight, weights_only=True))
 model.eval()
 

@@ -25,7 +25,8 @@ dict_users = np.load('../data/iid_cifar.npy', allow_pickle=True).item()
 
 args.device = torch.device('cuda:{}'.format(0) if torch.cuda.is_available() else 'cpu')
 model = ResNet18().to(args.device)
-path_net_glob_weight = f'../save/fedavg/global_model.pth'
+# path_net_glob_weight = f'../save/fedavg/global_model.pth'
+path_net_glob_weight = f'../save/fedavg/global_model_1000.pth'
 model.load_state_dict(torch.load(path_net_glob_weight, weights_only=True))
 model.eval()
 
@@ -106,8 +107,8 @@ for round in range(epoch_ibau):
         loss_sum+=loss_regu.item()
     
     #l2-ball
-    # pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
-    pert = batch_pert
+    pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
+    # pert = batch_pert
 
     #unlearn step         
     for batchnum in range(len(images_list)): 
