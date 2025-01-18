@@ -4,6 +4,10 @@ import torch.nn.functional as F
 from torch.utils.data import Subset, DataLoader
 from torchvision import datasets, transforms
 import numpy as np
+import copy
+from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.pyplot as plt
+import csv
 import random
 import sys
 sys.path.append('..')
@@ -11,6 +15,9 @@ from models.Nets import ResNet18
 from models.test import test_img
 from utils.options import args_parser
 import utils.hypergrad as hg
+
+random.seed(0)
+torch.manual_seed(42)
 
 #   1 LOAD POISONED MODEL
 args = args_parser()
@@ -86,6 +93,7 @@ outer_opt = torch.optim.Adam(model.parameters(),
                     betas=adam_betas,
                     weight_decay=wd,
                     amsgrad=True)
+list_loss_value_sum = []; list_loss_value_avg = []
 for round in range(epoch_ibau):
     # batch_pert = torch.zeros_like(data_clean_testset[0][:1], requires_grad=True, device=args.device)
     batch_pert = torch.zeros([1,3,input_height,input_width], requires_grad=True, device=args.device)
@@ -105,10 +113,39 @@ for round in range(epoch_ibau):
         loss_regu.backward(retain_graph = True)
         batch_opt.step()
         loss_sum+=loss_regu.item()
-    
+    loss_avg = loss_sum/len(dataset_root)
+    list_loss_value_sum.append(loss_sum); list_loss_value_avg.append(loss_avg) 
     #l2-ball
-    pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
-    # pert = batch_pert
+    # pert = batch_pert * min(1, 10 / torch.norm(batch_pert))
+    pert = batch_pert
+    with open('ibau_fl_loss.csv', mode='w', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow(['loss sum', 'loss avg'])
+        for item1, item2 in zip(list_loss_value_sum, list_loss_value_avg):
+            writer.writerow([item1, item2])
+    # Get a sample image tensor and its label
+    image_tensor, label = dataset_root[0]  # First image in the training dataset
+    image_tensor = image_tensor+copy.deepcopy(batch_pert).detach().cpu()[0]
+    print("Image tensor shape:", batch_pert.shape)
+    # Undo the normalization: Reverse the transformation
+    # Normalization was: (x - mean) / std -> Reverse it: x = x * std + mean
+    mean = torch.tensor([0.5, 0.5, 0.5])
+    std = torch.tensor([0.5, 0.5, 0.5])
+    image_tensor = image_tensor.permute(1, 2, 0)  # Convert (C, H, W) to (H, W, C)
+    image_tensor = image_tensor * std + mean  # Reverse normalization
+    # Ensure the values are within the range [0, 1] (clamp to avoid overflow)
+    image_tensor = image_tensor.clamp(0, 1)
+
+    # Save the image as a PDF
+    pdf_path = f"ibau_fl_genimg_{round+1}.pdf"
+    with PdfPages(pdf_path) as pdf:
+        plt.figure(figsize=(4, 4))  # Set figure size
+        plt.imshow(image_tensor)    # Plot the image
+        plt.axis('off')             # Turn off axes
+        plt.title(f"CIFAR-10 Label: {label}")  # Add label as title (optional)
+        pdf.savefig()               # Save the current figure to the PDF
+        plt.close() 
+
 
     #unlearn step         
     for batchnum in range(len(images_list)): 

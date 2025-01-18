@@ -56,7 +56,7 @@ def trigger_data(images, labels):
 
 loss_func = nn.CrossEntropyLoss()
 optimizer = torch.optim.SGD(
-            model.parameters(), lr=0.01, momentum=args.momentum)
+            model.parameters(), lr=0.001, momentum=args.momentum)
 # optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 for iter in range(EPOCH):
     batch_loss = []
@@ -64,11 +64,10 @@ for iter in range(EPOCH):
     # indices = list(range(dataset_length)); np.random.shuffle(indices);subset_indices=indices[:subset_size]
     # subset_dataset = Subset(dataset_train, subset_indices); dl_train = DataLoader(subset_dataset, batch_size=BS)
     for batch_idx, (images, labels) in enumerate(dl_train):
-        if iter<=3:
-            len_batch = len(images); len_poison = int(len_batch*0.1)
-            images_poison, labels_poison = trigger_data(images[:len_poison], labels[:len_poison])
-            images = torch.cat((images[:len_poison], images_poison), dim=0)
-            labels = torch.cat((labels[:len_poison], labels_poison)) 
+        len_batch = len(images); len_poison = int(len_batch*0.02)
+        images_poison, labels_poison = trigger_data(images[:len_poison], labels[:len_poison])
+        images = torch.cat((images[len_poison:], images_poison), dim=0)
+        labels = torch.cat((labels[len_poison:], labels_poison)) 
         images, labels = images.to(
             args.device), labels.to(args.device)
         model.zero_grad()
@@ -80,4 +79,4 @@ for iter in range(EPOCH):
     print(f"round: {iter+1}") 
     print("Main accuracy: {:.2f}".format(acc_test))
     print("Backdoor accuracy: {:.2f}".format(back_acc)) 
-    torch.save(model.state_dict(), "poisoned_model_ASR89_ACC73.pth")
+    torch.save(model.state_dict(), f"{iter+1}_poisoned_model_ASR_{int(back_acc)}_ACC_{int(acc_test)}.pth")
